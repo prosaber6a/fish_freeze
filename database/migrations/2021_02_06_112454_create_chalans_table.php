@@ -19,8 +19,10 @@ class CreateChalansTable extends Migration
             $table->integer('user_id');
             $table->date('date');
             $table->integer('chalan_no');
-            $table->float('quantity', 10, 2);
+            $table->float('grand_quantity', 10, 2);
             $table->float('total', 10, 2);
+            $table->float('discount', 10, 2);
+            $table->float('grand_total', 10, 2);
             $table->timestamps();
         });
     }

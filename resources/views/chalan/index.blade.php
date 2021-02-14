@@ -15,53 +15,57 @@
             {{ session()->get('success') }}
         </div>
     @endif
+    <div class="table-responsive">
 
-    <table class="table table-hover table-striped" id="datatable">
-        <thead>
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Mobile</th>
-            <th>Address</th>
-            <th>Qty</th>
-            <th>Subtotal</th>
-            <th>Action</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-            <th>User</th>
-        </tr>
-        </thead>
-        <tbody>
-        @php($i = 1)
-        @foreach($chalans as $cln)
+        <table class="table table-hover table-striped " id="datatable">
+            <thead>
             <tr>
-                <td>{{ $i++ }}</td>
-                <td>{{ $cln->customer->name }}</td>
-                <td>{{ $cln->customer->mobile }}</td>
-                <td>{{ $cln->customer->address }}</td>
-                <td class="d-flex">
-                    <a href="{{ route('edit_customer', $cust->id) }}" class="btn btn-warning">Edit</a> &nbsp;
-
-
-                    <form method="POST" action="{{ route('delete_customer', $cust->id) }}">
-                        @csrf
-                        @method('delete')
-
-                        <button type="submit" class="btn btn-danger"
-                                onclick="return confirm('Are you sure to delete?')">Delete
-                        </button>
-                    </form>
-
-
-                </td>
-                <td>{{ date('F j, Y, g:i a', strtotime($cust->created_at)) }}</td>
-                <td>{{ date('F j, Y, g:i a', strtotime($cust->updated_at)) }}</td>
-                <td>{{ $cust->user->name }}</td>
+                <th>#</th>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th>Discount</th>
+                <th>Grand Total</th>
+                <th>Action</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>User</th>
             </tr>
-        @endforeach
+            </thead>
+            <tbody>
+            @php($i = 1)
+            @foreach($chalans as $cln)
+                <tr>
+                    <td>{{ $i++ }}</td>
+                    <td>{{ $cln->customer->name }}</td>
+                    <td>{{ $cln->customer->mobile }}</td>
+                    <td>{{ $cln->grand_quantity }} KG</td>
+                    <td>৳ {{ $cln->total }}</td>
+                    <td>৳ {{ $cln->discount }}</td>
+                    <td>৳ {{ $cln->grand_total }}</td>
+                    <td class="text-center">
+                        <a href="{{ route('edit_chalan', $cln->id) }}" class="btn btn-warning">Edit</a> &nbsp;
+                        <form method="POST" action="{{ route('delete_chalan', $cln->id) }}">
+                            @csrf
+                            @method('delete')
 
-        </tbody>
-    </table>
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Are you sure to delete?')">Delete
+                            </button>
+                        </form>
+
+
+                    </td>
+                    <td>{{ date('F j, Y', strtotime($cln->created_at)) }}</td>
+                    <td>{{ date('F j, Y', strtotime($cln->updated_at)) }}</td>
+                    <td>{{ $cln->user->name }}</td>
+                </tr>
+            @endforeach
+
+            </tbody>
+        </table>
+    </div>
 
 
     <!-- Modal -->
@@ -83,15 +87,37 @@
                             </div>
                         @endforeach
 
-                        <div class="form-group">
-                            <label for="customer_id">Customer : </label>
-                            <select name="customer_id" id="customer_id" class="form-control">
-                                <option value="" selected="selected">Select a customer</option>
-                                @foreach($customer as $cust)
-                                    <option value="{{ $cust->id }}">{{ $cust->name }}</option>
-                                @endforeach
-                            </select>
+                        <div class="row">
+                            <div class="col">
+
+                                <div class="form-group">
+                                    <label for="date">Date : </label>
+                                    <input type="text" value="{{ date("d/m/Y") }}" required placeholder="dd/mm/yyyy"
+                                           class="form-control" name="date" id="date"/>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="customer_id">Customer : </label>
+                                    <select name="customer_id" id="customer_id" required class="form-select">
+                                        <option value="" selected="selected" disabled>Select a customer</option>
+                                        @foreach($customer as $cust)
+                                            <option value="{{ $cust->id }}">{{ $cust->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="chalan_no">Chalan No : </label>
+                                    <input type="text" class="form-control" autocomplete="off" required id="chalan_no"
+                                           name="chalan_no" placeholder="Chalan No"/>
+                                </div>
+                            </div>
                         </div>
+
+
+                        <hr>
 
 
                         <table class="table" id="product_item_table">
@@ -109,7 +135,7 @@
                             @for($i = 0; $i < 4; $i++)
                                 <tr class="productrow-{{ $i }}">
                                     <td>
-                                        <select name="product_id[]" class="form-control" id="product_id[]">
+                                        <select name="product_id[]" required class="form-select" id="product_id-{{$i}}">
                                             <option value="" selected="selected">Select a product</option>
                                             @foreach($products as $_pro)
                                                 <option value="{{ $_pro->id }}">{{ $_pro->name }}</option>
@@ -118,20 +144,25 @@
 
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control" id="quantity-{{$i}}" name="quantity[]" value="0"
+                                        <input type="text" required class="form-control" id="quantity-{{$i}}"
+                                               onkeyup="subTotal({{ $i }})" name="quantity[]" value="0"
                                                autocomplete="off">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control" id="rate-{{$i}}" name="rate[]" value="0"
+                                        <input type="text" required class="form-control" id="rate-{{$i}}"
+                                               onkeyup="subTotal({{ $i }})" name="rate[]" value="0"
                                                autocomplete="off">
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control form-control-plaintext" readonly id="subtotal-{{$i}}" name="subtotal[]"
+                                        <input type="text" required class="form-control disabled"
+                                               style="text-align: right;"
+                                               value="0" readonly id="subtotal-{{$i}}" name="subtotal[]"
                                                autocomplete="off">
                                     </td>
 
                                     <td>
-                                        <button class="btn btn-danger" type="button" onclick="removeRow({{ $i }})">X</button>
+                                        <button class="btn btn-danger" type="button" onclick="removeRow({{ $i }})">X
+                                        </button>
                                     </td>
                                 </tr>
                             @endfor
@@ -139,9 +170,34 @@
                         </table>
 
 
+                        <table class="table w-50 table-bordered" style="margin-left: auto;">
+                            <input type="hidden" name="grand_quantity" id="quantity" value="0"/>
+                            <tr>
+                                <td>Total:</td>
+                                <td>
+                                    <input type="text" class="form-control disabled" id="total" name="total" readonly
+                                           value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Discount:</td>
+                                <td>
+                                    <input type="text" class="form-control" required id="discount"
+                                           onkeyup="calcuateTotal()" autocomplete="off" name="discount" value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Grand Total:</td>
+                                <td>
+                                    <input type="text" class="form-control disabled" id="grand_total" value="0"
+                                           name="grand_total" readonly>
+                                </td>
+                            </tr>
+                        </table>
+
+
                     </div>
                     <div class="modal-footer">
-
                         <button type="button" class="btn btn-success" onclick="addRow()">Add row</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save</button>
@@ -154,18 +210,44 @@
 
 
 @endsection
+
 @section('foot')
 
     <script src="//cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function () {
-            // $('#datatable').DataTable();
+            $('#datatable').addClass('nowrap').DataTable({
+                responsive: true,
+            });
 
             @if($errors->all() != null)
             $('#create_modal').modal('show');
             @endif
 
+
         });
+
+
+        function subTotal(row = null) {
+            let quantity = parseFloat($("#quantity-" + row).val());
+            let rate = parseFloat($("#rate-" + row).val());
+            $("#subtotal-" + row).val((quantity * rate).toFixed(2));
+            calcuateTotal();
+        }
+
+        function calcuateTotal() {
+            let tablelength = $('#product_item_table tbody tr').length;
+            let total = 0.00;
+            let quantity = 0.00;
+            let discount = parseFloat($("#discount").val());
+            for (i = 0; i < tablelength; i++) {
+                total += parseFloat($("#subtotal-" + i).val());
+                quantity += parseFloat($("#quantity-" + i).val());
+            }
+            $("#total").val(total.toFixed(2));
+            $("#quantity").val(quantity.toFixed(3));
+            $("#grand_total").val((total - discount).toFixed(2));
+        }
 
         function addRow() {
             let tablelength = $('#product_item_table tbody tr').length;
@@ -173,7 +255,7 @@
             tr += `
             <tr class="productrow-${tablelength}">
                 <td>
-                    <select name="product_id[]" class="form-control" id="product_id[]">
+                    <select name="product_id[]" required class="form-select" id="product_id-${tablelength}">
                         <option value="" selected="selected">Select a product</option>
                         @foreach($products as $_pro)
             <option value="{{ $_pro->id }}">{{ $_pro->name }}</option>
@@ -182,14 +264,17 @@
 
         </td>
         <td>
-            <input type="text" class="form-control" id="quantity-${tablelength}" name="quantity[]" value="0" autocomplete="off">
-        </td>
-        <td>
-            <input type="text" class="form-control" id="rate-${tablelength}" name="rate[]" value="0" autocomplete="off">
-        </td>
-        <td>
-            <input type="text" class="form-control" id="subtotal-${tablelength}" name="subtotal[]" value="0" autocomplete="off">
-        </td>
+                                        <input type="text" class="form-control" required id="quantity-${tablelength}" onkeyup="subTotal(${tablelength})" name="quantity[]" value="0"
+                                               autocomplete="off">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" required id="rate-${tablelength}" onkeyup="subTotal(${tablelength})" name="rate[]" value="0"
+                                               autocomplete="off">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control disabled" required style="text-align: right;" value="0" readonly id="subtotal-${tablelength}" name="subtotal[]"
+                                               autocomplete="off">
+                                    </td>
 
         <td>
             <button class="btn btn-danger" role="button" onclick="removeRow(${tablelength})">X</button>
@@ -206,9 +291,10 @@
 
 
         function removeRow(row = null) {
-                // console.log('s')
+            // console.log('s')
             if (row) {
                 $(".productrow-" + row).remove();
+                calcuateTotal();
             } else {
                 alert('error! Refresh the page again');
             }

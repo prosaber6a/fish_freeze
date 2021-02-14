@@ -37,16 +37,17 @@
                 <td>{{ $cust->name }}</td>
                 <td>{{ $cust->mobile }}</td>
                 <td>{{ $cust->address }}</td>
-                <td class="d-flex">
-                    <a href="{{ route('edit_customer', $cust->id) }}" class="btn btn-warning">Edit</a> &nbsp;
+                <td>
+                    <a href="{{ route('edit_customer', $cust->id) }}" class="btn btn-warning btn-sm">Edit</a> &nbsp;
 
 
                     <form method="POST" action="{{ route('delete_customer', $cust->id) }}">
                         @csrf
                         @method('delete')
 
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete?')">Delete</button>
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure to delete?')">Delete</button>
                     </form>
+                    
 
 
                 </td>
